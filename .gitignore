@@ -1,0 +1,4 @@
+*.txt
+!requirements.txt
+*.zip
+.ipynb_checkpoints
