@@ -23,10 +23,18 @@ curl micro.mamba.pm/install.sh | bash
 ```
 Restart the terminal.
 
-Create environment with
+Create and activate environment with
 ```
 micromamba create -f env.yml
+micromamba activate cyc
 ```
+
+Add new kernel for your notebooks:
+```
+python -m ipykernel install --user --name cyc --display-name "Python (cyc)"
+```
+
+Then your can run `jupyter` or `jupyterlab`, select corresponding kernel and start working.
 
 ## Team:
 - Seleznyov Mikhail
