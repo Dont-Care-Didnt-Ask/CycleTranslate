@@ -12,10 +12,15 @@ wget http://www.manythings.org/anki/rus-eng.zip
 
 ## Setup
 
+[Install](https://mamba.readthedocs.io/en/latest/installation.html) `micromamba`. For Linux users:
 ```
-conda create -n cycle pytorch pytorch-cuda=11.7 -c pytorch -c nvidia
-conda activate cycle
-conda install --file requirements.txt -c huggingface
+curl micro.mamba.pm/install.sh | bash
+```
+Restart the terminal.
+
+Create environment with
+```
+micromamba create -f env.yml
 ```
 
 ## Team:
