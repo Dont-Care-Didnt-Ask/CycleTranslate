@@ -8,6 +8,11 @@ Final project on Skoltech DL-2023 course.
 
 ```
 wget http://www.manythings.org/anki/rus-eng.zip
+
+mkdir data
+mv rus-eng.zip data
+cd data
+unzip rus-eng.zip
 ```
 
 ## Setup
