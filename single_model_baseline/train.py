@@ -1,4 +1,3 @@
-from sklearn.model_selection import train_test_split
 from utils import shift_right, tokenize_data, collator, compute_metrics
 from torch.utils.data import DataLoader
 from dataset import TranslationDataset
@@ -51,31 +50,31 @@ if __name__ == '__main__':
 
     # Defining and parsing command line arguments
     parser.add_argument('-n', '--model_name', default='cointegrated/rut5-base', help='Model name for the output saving.')
-    parser.add_argument('-b', '--batch_size', default=64, help='Batch size of the model.')
+    parser.add_argument('-b', '--batch_size', type=int, default=64, help='Batch size of the model.')
     parser.add_argument('-s', '--seed', default=42, help='Seed for the RNG.')
-    parser.add_argument('-d', '--data', default='data/rus.txt', help='Path to the data csv.')
+    parser.add_argument('-d', '--data', default='data', help='Path to the data folder.')
 
     args = parser.parse_args()
 
-    # Reading data from CSV
-    data = pd.read_csv(args.data, sep="\t", names=["en", "ru", "attribution"])
-
-    # Train-test split
-    trainval, test = train_test_split(data, test_size=0.2, random_state=args.seed)
-    train, val = train_test_split(trainval, test_size=0.2, random_state=args.seed)
+    # Reading data
+    print("Reading data...")
+    train = pd.read_csv(f"{args.data}/low_resource_train.tsv", sep="\t", names=["en", "ru"], index_col=0)
+    val = pd.read_csv(f"{args.data}/val.tsv", sep="\t", names=["en", "ru"], index_col=0)
+    test = pd.read_csv(f"{args.data}/test.tsv", sep="\t", names=["en", "ru"], index_col=0)
 
     # Tokenization of the splitted data
+    print("Tokenizing...")
     tokenizer = transformers.T5Tokenizer.from_pretrained(args.model_name)
-    tokenized = {
+    tokenized_data = {
         "train": tokenize_data(train, tokenizer),
         "val": tokenize_data(val, tokenizer),
         "test": tokenize_data(test, tokenizer),
     }
 
     # Creating torch datasets
-    train_ds = TranslationDataset(*tokenized["train"])
-    val_ds = TranslationDataset(*tokenized["val"])
-    test_ds = TranslationDataset(*tokenized["test"])
+    train_ds = TranslationDataset(*tokenized_data["train"])
+    val_ds = TranslationDataset(*tokenized_data["val"])
+    test_ds = TranslationDataset(*tokenized_data["test"])
 
     # Creating dataloader
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, collate_fn=collator)
@@ -91,10 +90,11 @@ if __name__ == '__main__':
         per_device_eval_batch_size=args.batch_size,
         gradient_accumulation_steps=max(1, 16 // args.batch_size),
         learning_rate=5e-5,
-        weight_decay=0.1,
+        weight_decay=0.0,
         logging_steps=10,
         predict_with_generate=True,
         evaluation_strategy="epoch",
+        save_strategy="epoch",
         save_total_limit=1,
         seed=args.seed,
         data_seed=args.seed,
@@ -103,7 +103,9 @@ if __name__ == '__main__':
     )
 
     # Defining model
+    print("Defining model...")
     model = transformers.T5ForConditionalGeneration(transformers.T5Config.from_pretrained(args.model_name)).to(device)
+    #model = transformers.T5ForConditionalGeneration.from_pretrained(args.model_name).to(device)
 
     # Creating optimizer
     opt = torch.optim.AdamW(
@@ -131,6 +133,8 @@ if __name__ == '__main__':
         compute_metrics=metric,
     )
 
+    print("Starting train...")
     trainer.train()
 
-    trainer.save_state()
+    #trainer.save_state()
+    print("Success!")

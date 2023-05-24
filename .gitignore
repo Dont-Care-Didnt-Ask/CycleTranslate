@@ -1,5 +1,6 @@
 *.txt
 *.zip
+*.tsv
 .ipynb_checkpoints
-/data
 /results
+__pycache__
