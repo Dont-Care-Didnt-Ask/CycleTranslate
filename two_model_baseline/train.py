@@ -1,5 +1,7 @@
 import os
+import json
 import argparse
+from functools import partial
 
 import pandas as pd
 import numpy as np
@@ -8,7 +10,7 @@ import torch
 import transformers
 import evaluate
 from torch.utils.data import DataLoader
-from functools import partial
+from torch.nn.utils.rnn import pad_sequence
 from tqdm.auto import tqdm, trange
 
 from common import shift_right, tokenize_data, collator, compute_metrics
@@ -20,7 +22,7 @@ def train_one_epoch(model, dataloader, optimizer, scheduler, flip_direction, dev
     
     losses = []
     
-    for batch in tqdm(dataloader, desc="train"):
+    for step, batch in enumerate(tqdm(dataloader, desc="train")):
         optimizer.zero_grad()
 
         source_language_input_ids = batch["input_ids"].to(device)
@@ -42,6 +44,9 @@ def train_one_epoch(model, dataloader, optimizer, scheduler, flip_direction, dev
         loss.backward()
 
         losses.append(loss.item())
+
+        if step % 30 == 0:
+            print(f"Step: {step}   Loss: {loss.item():.3f}")
         
         optimizer.step()
         
@@ -80,10 +85,13 @@ def eval_model(model, dataloader, metric, num_beams, max_new_tokens, flip_direct
         )
 
         all_labels.append(target_language_input_ids.detach().cpu())
-        all_preds.append(out[0].detach().cpu())
+        all_preds.append(out.detach().cpu())
 
-    all_labels = torch.cat(all_labels).numpy()
-    all_preds = torch.cat(all_preds).numpy()
+    max_len = max(label.shape[1] for label in all_labels)
+    all_labels = torch.cat([torch.nn.functional.pad(label, (0, max_len - label.shape[1]), value=-100) for label in all_labels]).numpy()
+
+    max_len = max(pred.shape[1] for pred in all_preds)
+    all_preds = torch.cat([torch.nn.functional.pad(pred, (0, max_len - pred.shape[1]), value=0) for pred in all_preds]).numpy()
 
     return metric((all_preds, all_labels))
 
@@ -110,7 +118,10 @@ if __name__ == "__main__":
 
     # Reading data
     print("Reading data...")
-    train = pd.read_csv(f"{args.data}/low_resource_train.tsv", sep="\t", names=["en", "ru"], index_col=0)
+    train = pd.concat([
+        pd.read_csv(f"{args.data}/low_resource_train.tsv", sep="\t", names=["en", "ru"], index_col=0),
+        pd.read_csv(f"{args.data}/remaining_train.tsv", sep="\t", names=["en", "ru"], index_col=0)
+    ])
     val = pd.read_csv(f"{args.data}/val.tsv", sep="\t", names=["en", "ru"], index_col=0)
     test = pd.read_csv(f"{args.data}/test.tsv", sep="\t", names=["en", "ru"], index_col=0)
 
@@ -137,10 +148,14 @@ if __name__ == "__main__":
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
     config = dict(
-        n_epochs=1,
+        n_epochs=5,
         learning_rate=5e-5,
         weight_decay=0.0,
+        num_beams=4,
+        max_new_tokens=36,
     )
+    with open(f"results/{args.run_name}/config.json", "w") as f:
+        json.dump(config, f)
 
     metric = partial(compute_metrics, tokenizer=tokenizer, metric=evaluate.load("sacrebleu"))
 
@@ -171,7 +186,7 @@ if __name__ == "__main__":
             torch.save(model.state_dict(), f"results/{args.run_name}/{prefix}_model.pth")
             np.save(f"results/{args.run_name}/{prefix}_losses.npy", all_losses)
         
-        metrics = eval_model(model, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=flip_direction, device=device)
+        metrics = eval_model(model, val_loader, metric, config["num_beams"], config["max_new_tokens"], flip_direction, device=device)
         print(f"{prefix} validation:", metrics)
         all_metrics.append(metrics)
         pd.DataFrame(all_metrics).to_csv(f"results/{args.run_name}/{prefix}_val_metrics.csv")
