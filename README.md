@@ -29,6 +29,16 @@ micromamba create -f env.yml
 micromamba activate cyc
 ```
 
+Configure PYTHOPATH:
+```
+cd path/to/CycleTranslate
+export PROJECT_DIR=$(pwd)
+mamba env config vars set PYTHONPATH=${PROJECT_DIR}:
+
+mamba deactivate
+mamba activate
+```
+
 Add new kernel for your notebooks:
 ```
 python -m ipykernel install --user --name cyc --display-name "Python (cyc)"

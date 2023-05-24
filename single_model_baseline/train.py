@@ -1,7 +1,8 @@
-from utils import shift_right, tokenize_data, collator, compute_metrics
 from torch.utils.data import DataLoader
-from dataset import TranslationDataset
 from functools import partial
+
+from common import shift_right, tokenize_data, collator, compute_metrics
+from common import TranslationDataset
 
 
 import pandas as pd
@@ -85,7 +86,7 @@ if __name__ == '__main__':
     # Creating arguments object for the trainer
     training_args = transformers.Seq2SeqTrainingArguments(
         output_dir=f"./results/baseline-{args.model_name}",
-        num_train_epochs=5,
+        num_train_epochs=1,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=args.batch_size,
         gradient_accumulation_steps=max(1, 16 // args.batch_size),
