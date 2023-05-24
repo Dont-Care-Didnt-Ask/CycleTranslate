@@ -99,8 +99,7 @@ if __name__ == '__main__':
         save_total_limit=1,
         seed=args.seed,
         data_seed=args.seed,
-        fp16=True, 
-        #remove_unused_columns=False,
+        fp16=False,
     )
 
     # Defining model
