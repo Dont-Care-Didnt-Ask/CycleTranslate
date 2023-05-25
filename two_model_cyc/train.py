@@ -49,7 +49,6 @@ def train_one_epoch(model_en2ru, model_ru2en, dataloader,
             input_ids = eng2ru_generated,
             attention_mask = torch.ones_like(eng2ru_generated),
             labels = english_input_ids,
-            decoder_attention_mask = english_attention_mask,
         ).loss
 
         # (rus -> eng) -> rus
@@ -57,42 +56,39 @@ def train_one_epoch(model_en2ru, model_ru2en, dataloader,
             input_ids = ru2eng_generated,
             attention_mask = torch.ones_like(ru2eng_generated),
             labels = russian_input_ids,
-            decoder_attention_mask = russian_attention_mask,
         ).loss
 
-        # Identity loss (optional)
-        # rus -> rus
-        ru_id_loss = model_en2ru(
-            input_ids = russian_input_ids,
-            attention_mask = russian_attention_mask,
-            labels = russian_input_ids,
-            decoder_attention_mask = russian_attention_mask,
-        ).loss
+        # # Identity loss (optional)
+        # # rus -> rus
+        # ru_id_loss = model_en2ru(
+        #     input_ids = russian_input_ids,
+        #     attention_mask = russian_attention_mask,
+        #     labels = russian_input_ids,
+        #     decoder_attention_mask = russian_attention_mask,
+        # ).loss
 
-        # eng -> eng
-        en_id_loss = model_ru2en(
-            input_ids = english_input_ids,
-            attention_mask = english_attention_mask,
-            labels = english_input_ids,
-            decoder_attention_mask = english_attention_mask,
-        ).loss
+        # # eng -> eng
+        # en_id_loss = model_ru2en(
+        #     input_ids = english_input_ids,
+        #     attention_mask = english_attention_mask,
+        #     labels = english_input_ids,
+        #     decoder_attention_mask = english_attention_mask,
+        # ).loss
 
         # usual loss
         en_ru = model_en2ru(
             input_ids = english_input_ids,
             attention_mask = english_attention_mask,
             labels = russian_input_ids,
-            decoder_attention_mask = russian_attention_mask,
         )
 
         ru_en = model_ru2en(
             input_ids = russian_input_ids,
             attention_mask = russian_attention_mask,
             labels = english_input_ids,
-            decoder_attention_mask = english_attention_mask,   
         )
 
-        loss = ru_en.loss + en_ru.loss + en_cyc_loss + ru_cyc_loss + ru_id_loss + en_id_loss
+        loss = ru_en.loss + en_ru.loss + 0.3 * (en_cyc_loss + ru_cyc_loss) #+ ru_id_loss + en_id_loss
         
         loss.backward()
 
@@ -138,10 +134,13 @@ def eval_model(model, dataloader, metric, num_beams, max_new_tokens, flip_direct
         )
 
         all_labels.append(target_language_input_ids.detach().cpu())
-        all_preds.append(out[0].detach().cpu())
+        all_preds.append(out.detach().cpu())
 
-    all_labels = torch.cat(all_labels).numpy()
-    all_preds = torch.cat(all_preds).numpy()
+    max_len = max(label.shape[1] for label in all_labels)
+    all_labels = torch.cat([torch.nn.functional.pad(label, (0, max_len - label.shape[1]), value=-100) for label in all_labels]).numpy()
+
+    max_len = max(pred.shape[1] for pred in all_preds)
+    all_preds = torch.cat([torch.nn.functional.pad(pred, (0, max_len - pred.shape[1]), value=0) for pred in all_preds]).numpy()
 
     return metric((all_preds, all_labels))
 
@@ -195,8 +194,8 @@ if __name__ == "__main__":
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
     config = dict(
-        n_epochs=1,
-        learning_rate=5e-5,
+        n_epochs=30,
+        learning_rate=3e-4,
         weight_decay=0.0,
     )
 
@@ -230,12 +229,11 @@ if __name__ == "__main__":
         losses, _ = train_one_epoch(model_en2ru, model_ru2en, train_loader, 
                                     opt_en2ru, opt_ru2en, 
                                     scheduler_en2ru, scheduler_ru2en,
-                                    num_beams=2, max_new_tokens=36, device=device)
+                                    num_beams=1, max_new_tokens=36, device=device)
         all_losses.extend(losses)
 
         torch.save(model_en2ru.state_dict(), f"results/{args.run_name}/en2ru_model.pth")
-        torch.save(model_en2ru.state_dict(), f"results/{args.run_name}/en2ru_model.pth")
-        torch.save(model_ru2en.state_dict(), f"results/{args.run_name}/ruen_model.pth")
+        torch.save(model_ru2en.state_dict(), f"results/{args.run_name}/ru2en_model.pth")
         np.save(f"results/{args.run_name}/both_losses.npy", all_losses)
     
     metrics_en2ru = eval_model(model_en2ru, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=False, device=device)

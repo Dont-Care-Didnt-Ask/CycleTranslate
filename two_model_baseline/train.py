@@ -177,6 +177,12 @@ if __name__ == "__main__":
 
         all_losses = []
         all_metrics = []
+
+        metrics = eval_model(model, val_loader, metric, config["num_beams"], config["max_new_tokens"], flip_direction, device=device)
+        prefix = "ru2en" if flip_direction else "en2ru"
+        print(f"{prefix} validation before:", metrics)
+        all_metrics.append(metrics)
+
         for epoch in trange(config["n_epochs"], desc="epoch"):
             losses, _ = train_one_epoch(model, train_loader, opt, scheduler, flip_direction, device)
             
@@ -186,8 +192,9 @@ if __name__ == "__main__":
             torch.save(model.state_dict(), f"results/{args.run_name}/{prefix}_model.pth")
             np.save(f"results/{args.run_name}/{prefix}_losses.npy", all_losses)
         
+        prefix = "ru2en" if flip_direction else "en2ru"
         metrics = eval_model(model, val_loader, metric, config["num_beams"], config["max_new_tokens"], flip_direction, device=device)
-        print(f"{prefix} validation:", metrics)
+        print(f"{prefix} validation after:", metrics)
         all_metrics.append(metrics)
         pd.DataFrame(all_metrics).to_csv(f"results/{args.run_name}/{prefix}_val_metrics.csv")
 
