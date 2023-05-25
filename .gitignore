@@ -2,5 +2,6 @@
 *.zip
 *.tsv
 .ipynb_checkpoints
-/results
+/results/*/*.pth
+/results/*/*.npy
 __pycache__
