@@ -1,7 +1,15 @@
+import torch
+import numpy as np
 from torch.nn.utils.rnn import pad_sequence
 
+def cat_and_pad_last_dim_if_needed(tensor_sequence, cat_dim=0, pad_value=0):
+    max_len = max(ten.shape[-1] for ten in tensor_sequence)
+    cat_tensor = torch.cat(
+        [torch.nn.functional.pad(ten, (0, max_len - ten.shape[1]), value=pad_value) for ten in tensor_sequence],
+        dim=cat_dim,
+    )
 
-import numpy as np
+    return cat_tensor
 
 
 def tokenize_data(data, tokenizer):
