@@ -16,7 +16,7 @@ from common import TranslationDataset
 
 
 @torch.no_grad()
-def eval_model(model, dataloader, metric, num_beams, max_new_tokens, flip_direction, device="cuda:0"):
+def eval_model(model, dataloader, metric, num_beams, max_new_tokens, flip_direction, device="cuda:0", tokenizer=None):
     model.eval()
     
     all_labels = []
@@ -107,8 +107,8 @@ if __name__ == "__main__":
     model_ru2en.load_state_dict(torch.load(args.ru_checkpoint_path))
 
     # Evaluating models
-    metrics_en2ru = eval_model(model_en2ru, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=False, device=device)
-    metrics_ru2en = eval_model(model_ru2en, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=True, device=device)
+    metrics_en2ru = eval_model(model_en2ru, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=False, device=device, tokenizer=tokenizer)
+    metrics_ru2en = eval_model(model_ru2en, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=True, device=device, tokenizer=tokenizer)
 
     print(f"en2ru validation:", metrics_en2ru)
     print(f"ru2en validation:", metrics_ru2en)

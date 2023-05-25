@@ -47,8 +47,8 @@ def postprocess_text(preds, labels):
     Method for stripping labels and predictions
 
     '''
-    preds = [pred.strip() for pred in preds]
-    labels = [[label.strip()] for label in labels]
+    preds = [pred.strip().replace("_", " ") for pred in preds]
+    labels = [[label.strip().replace("_", " ")] for label in labels]
 
     return preds, labels
 
@@ -67,6 +67,12 @@ def compute_metrics(eval_preds, tokenizer, metric):
     decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
     decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
+
+    print("Some samples from compute_metric function:")
+    for i in range(0, len(decoded_preds), len(decoded_preds) // 6):
+        print("Pred:", decoded_preds[i])
+        print("Label:", decoded_labels[i])
+        print()
 
     result = metric.compute(predictions=decoded_preds, references=decoded_labels)
     result = {"bleu": result["score"]}
