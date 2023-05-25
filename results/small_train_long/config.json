@@ -1,0 +1,1 @@
+{"n_epochs": 30, "learning_rate": 0.0003, "weight_decay": 0.0, "num_beams": 2, "max_new_tokens": 36}
