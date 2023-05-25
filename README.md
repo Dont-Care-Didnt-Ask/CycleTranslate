@@ -33,10 +33,10 @@ Configure PYTHOPATH:
 ```
 cd path/to/CycleTranslate
 export PROJECT_DIR=$(pwd)
-mamba env config vars set PYTHONPATH=${PROJECT_DIR}:
+micromamba env config vars set PYTHONPATH=${PROJECT_DIR}:
 
-mamba deactivate
-mamba activate
+micromamba deactivate
+micromamba activate
 ```
 
 Add new kernel for your notebooks:
