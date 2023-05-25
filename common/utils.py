@@ -47,8 +47,8 @@ def postprocess_text(preds, labels):
     Method for stripping labels and predictions
 
     '''
-    preds = [pred.strip() for pred in preds]
-    labels = [[label.strip()] for label in labels]
+    preds = [pred.strip().replace('▁', ' ') for pred in preds]
+    labels = [[label.strip().replace('▁', ' ')] for label in labels]
 
     return preds, labels
 
