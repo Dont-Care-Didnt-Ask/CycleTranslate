@@ -71,12 +71,12 @@ Finally, we trained two models in mixed regime:
 | Experiment name | BLEU for en2ru model | BLEU for ru2en model |
 |---|---|---|
 | T5-base, CrossEntropy loss, 10 epochs | 4.7844 | 4.3415 |
-| T5-base, CrossEntropy loss, 30 epochs | 14.7513 | 18.7511 |
 | T5-base, CrossEntropy + Cyclic Loss, multistage, 10 + 1 + 10 epochs | 6.7953 | 7.2948 |
-| T5-base, CrossEntropy + Cyclic Loss, multistage, 30 + 1 + 10 epochs | 15.1079 | 20.2587 |
-| T5-base, CrossEntropy + Cyclic Loss, mixed, 30 epochs | 15.6286 | 20.0381 |
+| T5-base, CrossEntropy loss, 30 epochs | 14.7513 | 18.7511 |
+| T5-base, CrossEntropy + Cyclic Loss, multistage, 30 + 1 + 10 epochs | 15.1079 | **20.2587** |
+| T5-base, CrossEntropy + Cyclic Loss, mixed, 30 epochs | **15.6286** | 20.0381 |
 
-First, mixed strategy workes the best.
+First, mixed strategy workes the best with respect to average BLEU.
 Second, multistage training improves relative to training less epochs.
 However if we compare 30 epoch baseline against 10+1+10 multistage, the former wins convicingly, while the wall-clock time of training is comparable.
 
