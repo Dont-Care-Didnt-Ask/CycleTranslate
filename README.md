@@ -55,10 +55,18 @@ On this plot we can see, that cycle consistency only helps once, on 20 epochs fo
 We hypothesize, that small model is less robust to noisy training signals. 
 
 ### Unpaired data
-The third experiment was to train eight t5-base models, using different amount of data. First four models use only the small subset of labeled data that was used in previous experiments and CrossEntropy Loss, while the remaining models use Cyclic Loss and are trained in the following manner:
+The third experiment was to train 10 t5-base models, using different amount of data.
+First four models use only the small subset of labeled data that was used in previous experiments and CrossEntropy Loss.
+Next four models models use Cyclic Loss and are trained in the following manner:
 - Train for 10 (or 30) epochs on the `low_resource_train` (init stage)
 - Train for 1 epoch on a big set (~300k sentences) of unlabeled data (pretrain stage)
 - Train for 10 epochs on the `low_resource_train` (finetune stage)
+
+Finally, we trained two models in mixed regime:
+- At each training step, model receives a batch of paired and a batch of unpaired data
+- For paired data usual loss is computed
+- For both paired and unpaired data consistency loss is computed
+- Total loss is a weighted sum of these losses
 
 | Experiment name | BLEU for en2ru model | BLEU for ru2en model |
 |---|---|---|
@@ -66,14 +74,18 @@ The third experiment was to train eight t5-base models, using different amount o
 | T5-base, CrossEntropy loss, 30 epochs | 14.7513 | 18.7511 |
 | T5-base, CrossEntropy + Cyclic Loss, multistage, 10 + 1 + 10 epochs | 6.7953 | 7.2948 |
 | T5-base, CrossEntropy + Cyclic Loss, multistage, 30 + 1 + 10 epochs | 15.1079 | 20.2587 |
+| T5-base, CrossEntropy + Cyclic Loss, mixed, 30 epochs | 15.6286 | 20.0381 |
 
-We get improvement over training for less number of epochs. 
-But if we compare 30 epoch baseline against 10+1+10 multistage, the former wins convicingly, while the wall-clock time of training is comparable.
+First, mixed strategy workes the best.
+Second, multistage training improves relative to training less epochs.
+However if we compare 30 epoch baseline against 10+1+10 multistage, the former wins convicingly, while the wall-clock time of training is comparable.
 
 ### Summary
 
 - Can we benefit from unpaired data?
-   - Not in this setup. It is actually cheaper to run usual training longer. 
+   - Mixed approach brings some benefits.
+   We hypothesize, that with very large amount of epochs it will still be ahead of the baseline, making use of more samples.
+   However, it is dramatically slower (x5-x6).
 - Can we benefit from enforcing cycle consistency in low-data regime?
    - Yes, if the amount of training epochs is low.
 - How does it depend on the model size?

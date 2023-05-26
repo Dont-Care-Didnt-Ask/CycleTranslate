@@ -195,7 +195,7 @@ if __name__ == "__main__":
 
     config = dict(
         n_epochs=30,
-        learning_rate=3e-4,
+        learning_rate=5e-4,
         weight_decay=0.0,
     )
 
@@ -236,16 +236,17 @@ if __name__ == "__main__":
         torch.save(model_ru2en.state_dict(), f"results/{args.run_name}/ru2en_model.pth")
         np.save(f"results/{args.run_name}/both_losses.npy", all_losses)
     
-    metrics_en2ru = eval_model(model_en2ru, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=False, device=device)
-    metrics_ru2en = eval_model(model_ru2en, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=True, device=device)
+        if epoch % 10 == 9:
+            metrics_en2ru = eval_model(model_en2ru, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=False, device=device)
+            metrics_ru2en = eval_model(model_ru2en, val_loader, metric, num_beams=2, max_new_tokens=36, flip_direction=True, device=device)
 
-    print(f"en2ru validation:", metrics_en2ru)
-    print(f"ru2en validation:", metrics_ru2en)
+            print(f"en2ru validation:", metrics_en2ru)
+            print(f"ru2en validation:", metrics_ru2en)
 
-    all_metrics_en2ru.append(metrics_en2ru)
-    all_metrics_ru2en.append(metrics_ru2en)
+            all_metrics_en2ru.append(metrics_en2ru)
+            all_metrics_ru2en.append(metrics_ru2en)
 
-    pd.DataFrame(all_metrics_en2ru).to_csv(f"results/{args.run_name}/en2ru_val_metrics.csv")
-    pd.DataFrame(all_metrics_ru2en).to_csv(f"results/{args.run_name}/ru2en_val_metrics.csv")
+            pd.DataFrame(all_metrics_en2ru).to_csv(f"results/{args.run_name}/en2ru_val_metrics.csv")
+            pd.DataFrame(all_metrics_ru2en).to_csv(f"results/{args.run_name}/ru2en_val_metrics.csv")
 
     print("Success!")
