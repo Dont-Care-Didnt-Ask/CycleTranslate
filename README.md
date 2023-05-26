@@ -15,7 +15,7 @@ So, having two translation models, we can take unpaired data, translate it with 
 
 We can also apply the same trick, training two translation models in parallel on paired data, trying to elicit more signal from what we have.
 
-There are many ways to delevop from this idea, so to be directed, we fomulate several more concrete questions:
+There are many ways to delevop from this idea, so to be directed, we formulate several more concrete questions:
 - Can we benefit from additional unlabeled data using cycle consistency?
 - Can we benefit from enforcing cycle consistency in low-data regime?
 - How do the results depend on the model size?
@@ -55,7 +55,7 @@ On this plot we can see, that cycle consistency only helps once, on 20 epochs fo
 We hypothesize, that small model is less robust to noisy training signals. 
 
 ### Unpaired data
-The third experiment was to train six t5-base models, using different amount of data. First four models use only the small subset of labeled data that was used in previous experiments and CrossEntropy Loss, while the last two models use Cyclic Loss and are being trained in the following manner:
+The third experiment was to train eight t5-base models, using different amount of data. First four models use only the small subset of labeled data that was used in previous experiments and CrossEntropy Loss, while the remaining models use Cyclic Loss and are trained in the following manner:
 - Train for 10 (or 30) epochs on the `low_resource_train` (init stage)
 - Train for 1 epoch on a big set (~300k sentences) of unlabeled data (pretrain stage)
 - Train for 10 epochs on the `low_resource_train` (finetune stage)
@@ -68,7 +68,7 @@ The third experiment was to train six t5-base models, using different amount of 
 | T5-base, CrossEntropy + Cyclic Loss, multistage, 30 + 1 + 10 epochs | 15.1079 | 20.2587 |
 
 We get improvement over training for less number of epochs. 
-But if we compare 30 epoch baseline against 10-1-10 multistage, the former wins convicingly, while the wall-clock time of training is comparable.
+But if we compare 30 epoch baseline against 10+1+10 multistage, the former wins convicingly, while the wall-clock time of training is comparable.
 
 ### Summary
 
