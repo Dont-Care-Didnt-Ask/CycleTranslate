@@ -72,8 +72,13 @@ But if we compare 30 epoch baseline against 10+1+10 multistage, the former wins 
 
 ### Summary
 
-In conclusion, cycle consistency constraint can help when training larger models for a smaller amount of epochs.
-In other cases it does not provide any benefit, or even worsens the score.
+- Can we benefit from unpaired data?
+   - Not in this setup. It is actually cheaper to run usual training longer. 
+- Can we benefit from enforcing cycle consistency in low-data regime?
+   - Yes, if the amount of training epochs is low.
+- How does it depend on the model size?
+   - In our experiments small models were harder to train with cycle constraint.
+
 
 ## Getting data
 
